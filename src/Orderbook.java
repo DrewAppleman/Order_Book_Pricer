@@ -1,7 +1,10 @@
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -16,6 +19,8 @@ public class Orderbook {
 		LinkedHashMap<String,orderData> buyOrders = new LinkedHashMap<String, orderData>();
 		LinkedHashMap<String,orderData> sellOrders = new LinkedHashMap<String, orderData>();	
 		orderData currentOrder = new orderData();
+		List<orderData> buyOrderList = new ArrayList<orderData>();
+		List<orderData> sellOrderList = new ArrayList<orderData>();
 		
 
        // File file = new File("smallSample.txt");
@@ -29,7 +34,7 @@ public class Orderbook {
             // by one till all line is read.
             //
 
-            File file = new File("largeSample");
+            File file = new File("smallSample");
             
             Scanner scanner = new Scanner(file);
             while (scanner.hasNext()) {
@@ -50,22 +55,52 @@ public class Orderbook {
                 	if(side.equals("B")){
                 		//System.out.println(price);
                 		buyOrders.put(order_ID, currentOrder);
+                		buyOrderList.add(currentOrder);
                 	}
                 	
                 	//For a limit ask
                 	else{
                 		sellOrders.put(order_ID, currentOrder);
                 	}
-                	if(Integer.parseInt(size)<1|| Integer.parseInt(size)>1000){
-                		System.out.println(size);
-                	}
                 }
-                else{
+                
+                //Reducing a Limit order
+                else if(add_Red==("R")){
                 	String order_ID = scanner.next();
                 	String size = scanner.next();	// Size of order in shares
                 
-                	if(Integer.parseInt(size)<1 || Integer.parseInt(size)>1000){
-                		System.out.println(size + " -R");
+                	//Executes reduce order for buy orders
+                	if(buyOrders.containsKey(order_ID)){
+                		
+                		//Reduces part of an order
+                		if(Integer.parseInt(size)<buyOrders.get(order_ID).size){
+                			buyOrders.get(order_ID).size=buyOrders.get(order_ID).size-Integer.parseInt(size);
+                		}
+                		else if(Integer.parseInt(size)==buyOrders.get(order_ID).size){			//gets rid of full order
+                			buyOrders.remove(order_ID);
+                		}
+                		else{
+                			System.out.println("Error: Attempted to reduce order by more than the order size");
+                		}
+                	}
+                	
+                	//Executes reduce order for sell orders
+                	else if(sellOrders.containsKey(order_ID)){
+                		if(Integer.parseInt(size)<sellOrders.get(order_ID).size){
+                			sellOrders.get(order_ID).size=sellOrders.get(order_ID).size-Integer.parseInt(size);
+                		}
+                		else if(Integer.parseInt(size)==sellOrders.get(order_ID).size){			//gets rid of full order
+                			sellOrders.remove(order_ID);
+                		}
+                		else{
+                			System.out.println("Error: Attempted to reduce order by more than the order size");
+                		}
+                	}
+                	
+                	//Give error message and go to next line if there is an issue with input
+                	else{
+            			System.out.println("Error: Invalid input");
+                        scanner.nextLine();
                 	}
                 }
                 
@@ -74,6 +109,12 @@ public class Orderbook {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+	}
+	
+	public void checkPrices(String Bid_Ask){
+		if(Bid_Ask=="B"){
+			
+		}
 	}
 
 }
