@@ -1,5 +1,7 @@
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.io.FileNotFoundException;
@@ -17,15 +19,16 @@ import java.io.File;
 
 public class Orderbook {
 
-	final int Target_Size=200;
+	final static int Target_Size=200;
 	
 	public static void main(String[] args) {
-		LinkedHashMap<String,orderData> buyOrders = new LinkedHashMap<String, orderData>();
-		LinkedHashMap<String,orderData> sellOrders = new LinkedHashMap<String, orderData>();	
+		LinkedHashMap<String,orderData> mapOrders = new LinkedHashMap<String, orderData>();
+		//LinkedHashMap<String,orderData> sellOrders = new LinkedHashMap<String, orderData>();	
 		//orderData currentOrder = new orderData();
 		List<orderData> buyOrderList = new ArrayList<orderData>();
 		List<orderData> sellOrderList = new ArrayList<orderData>();
-		
+		double lowestBuyPrice=9999999;
+		double highestSellPrice=0;
 
        // File file = new File("smallSample.txt");
         
@@ -51,20 +54,44 @@ public class Orderbook {
                 	String price = scanner.next();	//Limit price of order
                 	String size = scanner.next();	// Size of order in shares
                 	
+                	//Set the current order
                 	currentOrder.price=Double.parseDouble(price);
                 	currentOrder.size=Integer.parseInt(size);
                 	
-                	//For a bid limit order
+                	//BID ORDER
                 	if(side.equals("B")){
-                		System.out.println(order_ID);
-                		buyOrders.put(order_ID, currentOrder);
+                		mapOrders.put(order_ID, currentOrder);
                 		buyOrderList.add(currentOrder);
-                		//buyOrders.put(order_ID, currentOrder);
+                		
+                		//Sort the list from most expensive to cheapest
+                		Collections.sort(buyOrderList, new reverseOrderDataComparator());
+                		if(highestSellPrice<checkPrices(buyOrderList) && checkPrices(buyOrderList)!=-1){
+                			highestSellPrice=checkPrices(buyOrderList);
+                			System.out.println(timeStamp+" "+ "S" + " "+ highestSellPrice);
+                		}
+                		else if(checkPrices(buyOrderList)==-1 && highestSellPrice!=0){
+                			System.out.println("NA");
+                			highestSellPrice=0;
+                		}
                 	}
                 	
-                	//For a limit ask
+                	//ASK ORDER
                 	else{
-                		sellOrders.put(order_ID, currentOrder);
+                		mapOrders.put(order_ID, currentOrder);
+                		sellOrderList.add(currentOrder);
+                		
+                		//Sort the list from cheapest to most expensive
+                		Collections.sort(sellOrderList, new orderDataComparator());
+                		
+                		//Check to see if Buy price changed
+                		if(lowestBuyPrice>checkPrices(sellOrderList) && checkPrices(sellOrderList)!=-1){
+                			lowestBuyPrice=checkPrices(sellOrderList);
+                			System.out.println(timeStamp+" "+ "B" + " "+ lowestBuyPrice);
+                		}
+                		else if(checkPrices(sellOrderList)==-1 && lowestBuyPrice!=9999999){
+                			System.out.println("NA");
+                			lowestBuyPrice=9999999;
+                		}
                 	}
                 }
                 
@@ -74,27 +101,14 @@ public class Orderbook {
                 	String size = scanner.next();	// Size of order in shares
                 
                 	//Executes reduce order for buy orders
-                	if(buyOrders.containsKey(order_ID)){
+                	if(mapOrders.containsKey(order_ID)){
                 		
                 		//Reduces part of an order
-                		if(Integer.parseInt(size)<buyOrders.get(order_ID).size){
-                			buyOrders.get(order_ID).size=buyOrders.get(order_ID).size-Integer.parseInt(size);
+                		if(Integer.parseInt(size)<mapOrders.get(order_ID).size){
+                			mapOrders.get(order_ID).size=mapOrders.get(order_ID).size-Integer.parseInt(size);
                 		}
-                		else if(Integer.parseInt(size)==buyOrders.get(order_ID).size){			//gets rid of full order
-                			buyOrders.remove(order_ID);
-                		}
-                		else{
-                			System.out.println("Error: Attempted to reduce order by more than the order size");
-                		}
-                	}
-                	
-                	//Executes reduce order for sell orders
-                	else if(sellOrders.containsKey(order_ID)){
-                		if(Integer.parseInt(size)<sellOrders.get(order_ID).size){
-                			sellOrders.get(order_ID).size=sellOrders.get(order_ID).size-Integer.parseInt(size);
-                		}
-                		else if(Integer.parseInt(size)==sellOrders.get(order_ID).size){			//gets rid of full order
-                			sellOrders.remove(order_ID);
+                		else if(Integer.parseInt(size)==mapOrders.get(order_ID).size){			//gets rid of full order
+                			mapOrders.remove(order_ID);
                 		}
                 		else{
                 			System.out.println("Error: Attempted to reduce order by more than the order size");
@@ -106,25 +120,51 @@ public class Orderbook {
             			System.out.println("Error: Invalid input");
                         scanner.nextLine();
                 	}
+                	
+                	
+            		//Sort the list from cheapest to most expensive
+            		Collections.sort(sellOrderList, new orderDataComparator());
+            		Collections.sort(buyOrderList, new reverseOrderDataComparator());
+            		
+            		//Check to see if Buy price changed
+            		if(lowestBuyPrice>checkPrices(sellOrderList) && checkPrices(sellOrderList)!=0){
+            			lowestBuyPrice=checkPrices(sellOrderList);
+            			System.out.println(timeStamp+" "+ "B" + " "+ lowestBuyPrice);
+            		}
+            		else if(checkPrices(sellOrderList)==-1 && lowestBuyPrice!=9999999){
+            			System.out.println("NA");
+            			lowestBuyPrice=9999999;
+            		}
+            		
+            		//Check to see if Buy price changed
+            		Collections.sort(buyOrderList, new reverseOrderDataComparator());
+            		if(highestSellPrice<checkPrices(buyOrderList) && checkPrices(buyOrderList)!=-1){
+            			highestSellPrice=checkPrices(buyOrderList);
+            			System.out.println(timeStamp+" "+ "S" + " "+ highestSellPrice);
+            		}
+            		else if(checkPrices(buyOrderList)==-1 && highestSellPrice!=0){
+            			System.out.println("NA");
+            			highestSellPrice=0;
+            		}
                 }
                 
                 //System.out.println(line);
             }
             
             //System.out.println(buyOrders.get("c").price);
-            buyOrderList.remove(buyOrders.get("f"));
-            
-            //Test print arraylist
-            for(int i=0; i<buyOrderList.size();i++){
-            	System.out.println(buyOrderList.get(i).price);
-            }
+           // buyOrderList.remove(mapOrders.get("f"));
             
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 	}
 	
-	public double checkPrices(ArrayList<orderData> orders){
+	
+	
+	
+	//Checks for the best available price to buy or sell and returns total price
+	//List parameter must be sorted
+	public static double checkPrices(List<orderData> orders){
 		int remainingTarget=Target_Size;
 		int totalCost=0;
 		
