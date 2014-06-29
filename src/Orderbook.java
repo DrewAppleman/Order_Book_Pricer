@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -15,10 +16,13 @@ import java.io.File;
 
 
 public class Orderbook {
+
+	final int Target_Size=200;
+	
 	public static void main(String[] args) {
 		LinkedHashMap<String,orderData> buyOrders = new LinkedHashMap<String, orderData>();
 		LinkedHashMap<String,orderData> sellOrders = new LinkedHashMap<String, orderData>();	
-		orderData currentOrder = new orderData();
+		//orderData currentOrder = new orderData();
 		List<orderData> buyOrderList = new ArrayList<orderData>();
 		List<orderData> sellOrderList = new ArrayList<orderData>();
 		
@@ -26,24 +30,23 @@ public class Orderbook {
        // File file = new File("smallSample.txt");
         
         try {
-            //
-            // Create a new Scanner object which will read the data 
-            // from the file passed in. To check if there are more 
-            // line to read from it we check by calling the 
-            // scanner.hasNextLine() method. We then read line one 
-            // by one till all line is read.
-            //
 
             File file = new File("smallSample");
             
             Scanner scanner = new Scanner(file);
+            
+            //**********************
+            //**Loop To Read input**
+            //**********************
             while (scanner.hasNext()) {
+            	orderData currentOrder = new orderData();
                 String timeStamp = scanner.next();
                 String add_Red = scanner.next();	//An 'A' if it is adding an order to book, an R if it is reducing order
                 
                 //Adding a Limit order to books
                 if(add_Red.equals("A")){
                 	String order_ID = scanner.next();
+                	order_ID.replace(" ", "");		// Delete Leading and trailing zeroes
                 	String side = scanner.next(); 	//'B' if it is a bid, 'S' if it is an ask 
                 	String price = scanner.next();	//Limit price of order
                 	String size = scanner.next();	// Size of order in shares
@@ -53,9 +56,10 @@ public class Orderbook {
                 	
                 	//For a bid limit order
                 	if(side.equals("B")){
-                		//System.out.println(price);
+                		System.out.println(order_ID);
                 		buyOrders.put(order_ID, currentOrder);
                 		buyOrderList.add(currentOrder);
+                		//buyOrders.put(order_ID, currentOrder);
                 	}
                 	
                 	//For a limit ask
@@ -106,15 +110,36 @@ public class Orderbook {
                 
                 //System.out.println(line);
             }
+            
+            //System.out.println(buyOrders.get("c").price);
+            buyOrderList.remove(buyOrders.get("f"));
+            
+            //Test print arraylist
+            for(int i=0; i<buyOrderList.size();i++){
+            	System.out.println(buyOrderList.get(i).price);
+            }
+            
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 	}
 	
-	public void checkPrices(String Bid_Ask){
-		if(Bid_Ask=="B"){
-			
+	public double checkPrices(ArrayList<orderData> orders){
+		int remainingTarget=Target_Size;
+		int totalCost=0;
+		
+		
+		for(int i=0; i<orders.size(); i++){
+			if(remainingTarget>orders.get(i).size){
+				remainingTarget=remainingTarget-orders.get(i).size;
+				totalCost+=orders.get(i).size*orders.get(i).price;
+			}
+			else{
+				totalCost+=remainingTarget*orders.get(i).price;
+				return totalCost;
+			}
 		}
+		return -1;
 	}
 
 }
