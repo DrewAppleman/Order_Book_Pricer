@@ -43,8 +43,9 @@ public class Orderbook {
             //**Loop To Read input**
             //**********************
             while (scanner.hasNext()) {
-            	check++;
-            	System.out.println(check);
+            	//check++;						//Keeps track of iterations
+            	//System.out.println(check);
+            	
             	orderData currentOrder = new orderData();
                 String timeStamp = scanner.next();
                 String add_Red = scanner.next();	//An 'A' if it is adding an order to book, an R if it is reducing order
@@ -133,7 +134,7 @@ public class Orderbook {
             		Collections.sort(buyOrderList, new reverseOrderDataComparator());
             		
             		//Check to see if Buy price changed
-            		if(lowestBuyPrice>checkPrices(sellOrderList) && checkPrices(sellOrderList)!=0){
+            		if(lowestBuyPrice>checkPrices(sellOrderList) && checkPrices(sellOrderList)!=-1){
             			lowestBuyPrice=checkPrices(sellOrderList);
             			System.out.println(timeStamp+" "+ "B" + " "+ lowestBuyPrice);
             		}
@@ -142,7 +143,7 @@ public class Orderbook {
             			lowestBuyPrice=9999999;
             		}
             		
-            		//Check to see if Buy price changed
+            		//Check to see if sell price changed
             		Collections.sort(buyOrderList, new reverseOrderDataComparator());
             		if(highestSellPrice<checkPrices(buyOrderList) && checkPrices(buyOrderList)!=-1){
             			highestSellPrice=checkPrices(buyOrderList);
@@ -156,12 +157,12 @@ public class Orderbook {
                 
                 
                 //TEST PRINTS
-                for(int i=0; i<buyOrderList.size(); i++){
+               /* for(int i=0; i<buyOrderList.size(); i++){
                 	System.out.println("*"+buyOrderList.get(i).size+" "+ buyOrderList.get(i).price);
                 }
                 for(int i=0; i<sellOrderList.size(); i++){
                 	System.out.println("!"+sellOrderList.get(i).size+" "+ sellOrderList.get(i).price);
-                }
+                }*/
             }
             
             //System.out.println(buyOrders.get("c").price);
@@ -179,7 +180,7 @@ public class Orderbook {
 	//List parameter must be sorted
 	public static double checkPrices(List<orderData> orders){
 		int remainingTarget=Target_Size;
-		int totalCost=0;
+		double totalCost=0.0;
 		
 		
 		for(int i=0; i<orders.size(); i++){
