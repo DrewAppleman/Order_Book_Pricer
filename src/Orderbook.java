@@ -29,6 +29,7 @@ public class Orderbook {
 		List<orderData> sellOrderList = new ArrayList<orderData>();
 		double lowestBuyPrice=9999999;
 		double highestSellPrice=0;
+		int check=0;
 
        // File file = new File("smallSample.txt");
         
@@ -42,6 +43,8 @@ public class Orderbook {
             //**Loop To Read input**
             //**********************
             while (scanner.hasNext()) {
+            	check++;
+            	System.out.println(check);
             	orderData currentOrder = new orderData();
                 String timeStamp = scanner.next();
                 String add_Red = scanner.next();	//An 'A' if it is adding an order to book, an R if it is reducing order
@@ -96,8 +99,9 @@ public class Orderbook {
                 }
                 
                 //Reducing a Limit order
-                else if(add_Red==("R")){
+                else if(add_Red.equals("R")){
                 	String order_ID = scanner.next();
+                	order_ID.replace(" ", "");		// Delete Leading and trailing zeroes
                 	String size = scanner.next();	// Size of order in shares
                 
                 	//Executes reduce order for buy orders
@@ -108,6 +112,8 @@ public class Orderbook {
                 			mapOrders.get(order_ID).size=mapOrders.get(order_ID).size-Integer.parseInt(size);
                 		}
                 		else if(Integer.parseInt(size)==mapOrders.get(order_ID).size){			//gets rid of full order
+                			if(sellOrderList.contains(mapOrders.get(order_ID))) sellOrderList.remove(mapOrders.get(order_ID));
+                			else if(buyOrderList.contains(mapOrders.get(order_ID))) buyOrderList.remove(mapOrders.get(order_ID));
                 			mapOrders.remove(order_ID);
                 		}
                 		else{
@@ -148,7 +154,14 @@ public class Orderbook {
             		}
                 }
                 
-                //System.out.println(line);
+                
+                //TEST PRINTS
+                for(int i=0; i<buyOrderList.size(); i++){
+                	System.out.println("*"+buyOrderList.get(i).size+" "+ buyOrderList.get(i).price);
+                }
+                for(int i=0; i<sellOrderList.size(); i++){
+                	System.out.println("!"+sellOrderList.get(i).size+" "+ sellOrderList.get(i).price);
+                }
             }
             
             //System.out.println(buyOrders.get("c").price);
